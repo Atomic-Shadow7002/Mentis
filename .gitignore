@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# textbooks
+assets/textbooks
+
+# raw data
+data
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
