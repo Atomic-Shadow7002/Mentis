@@ -1,85 +1,77 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-import type { RawPage } from "./pdfIngest.ts";
+import type { RawPage, LearningSection } from "./types.ts";
+import { classifyBlock } from "./classifyBlock.ts";
 
-/**
- * Rough semantic section detected from the textbook
- */
-export interface RawSection {
-  title: string;
-  pages: number[];
-  content: string;
+function toBlocks(text: string): string[] {
+  return text
+    .split(/\n|(?<=\.)\s+(?=[A-Z])/)
+    .map((b) => b.trim())
+    .filter((b) => b.length > 20);
 }
 
-/**
- * Semantic triggers that EXIST in your textbook text
- */
-const SECTION_TRIGGERS: string[] = [
-  "what is science",
-  "what will we explore",
-  "activity",
-  "scientific method",
-  "how can we",
-];
+export async function parseSections(
+  pages: RawPage[]
+): Promise<LearningSection[]> {
+  const sections: LearningSection[] = [];
 
-/**
- * Groups text into semantic sections (not visual chapters)
- */
-export function parseSections(pages: RawPage[]): RawSection[] {
-  const sections: RawSection[] = [];
-  let current: RawSection | null = null;
+  let current: LearningSection = {
+    title: "Introduction",
+    pages: [],
+    explanation: "",
+    examples: [],
+    activities: [],
+    reflectionQuestions: [],
+  };
 
   for (const page of pages) {
-    const paragraphs = page.text
-      .split(/(?<=\.)\s+/)
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
+    const blocks = toBlocks(page.text);
 
-    for (const paragraph of paragraphs) {
-      const lower = paragraph.toLowerCase();
+    for (const block of blocks) {
+      const { intent } = await classifyBlock(block);
 
-      if (
-        paragraph.length > 40 &&
-        SECTION_TRIGGERS.some((trigger) => lower.includes(trigger))
-      ) {
-        if (current) {
-          sections.push(current);
-        }
+      if (intent === "section-title" && block.length < 80) {
+        sections.push(current);
 
         current = {
-          title: paragraph.slice(0, 80) + "...",
+          title: block,
           pages: [page.pageNumber],
-          content: paragraph + " ",
+          explanation: "",
+          examples: [],
+          activities: [],
+          reflectionQuestions: [],
         };
-      } else if (current) {
-        current.content += paragraph + " ";
+        continue;
+      }
+
+      if (!current.pages.includes(page.pageNumber)) {
+        current.pages.push(page.pageNumber);
+      }
+
+      switch (intent) {
+        case "activity":
+          current.activities.push({
+            id: block.split(":")[0],
+            prompts: [],
+          });
+          break;
+
+        case "example":
+          current.examples.push(block);
+          break;
+
+        case "reflection-question":
+          current.reflectionQuestions.push(block);
+          break;
+
+        default:
+          current.explanation += block + " ";
       }
     }
   }
 
-  if (current) {
-    sections.push(current);
-  }
+  sections.push(current);
 
-  return sections;
-}
-
-/* ---------------- CLI ---------------- */
-
-const __filename = fileURLToPath(import.meta.url);
-
-if (process.argv[1] === __filename) {
-  const pagesPath = path.join("data", "raw", "pages.json");
-
-  const pages: RawPage[] = JSON.parse(fs.readFileSync(pagesPath, "utf-8"));
-
-  const sections = parseSections(pages);
-
-  fs.writeFileSync(
-    path.join("data", "raw", "sections.json"),
-    JSON.stringify(sections, null, 2)
-  );
-
-  console.log(`✅ Detected ${sections.length} sections`);
+  return sections.map((s) => ({
+    ...s,
+    explanation: s.explanation.trim(),
+  }));
 }

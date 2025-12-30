@@ -1,61 +1,44 @@
 import fs from "fs";
-import path from "path";
 import { PDFParse } from "pdf-parse";
-import { fileURLToPath } from "url";
+import type { RawPage } from "./types";
 
 /**
- * One extracted page from the PDF
+ * Cleans textbook layout noise but preserves meaning
  */
-export interface RawPage {
-  pageNumber: number;
-  text: string;
+function cleanText(text: string): string {
+  return (
+    text
+      // headers / footers
+      .replace(/Curiosity\s*\|\s*Textbook.*Grade\s*6/gi, "")
+      .replace(/Reprint\s*2025-26/gi, "")
+      .replace(/Chapter\s*\d+\.indd.*$/gim, "")
+
+      // layout junk
+      .replace(/\t+/g, " ")
+      .replace(/ +/g, " ")
+      .replace(/\n{2,}/g, "\n")
+
+      // broken line joins
+      .replace(/\n(?=[a-z])/g, " ")
+
+      .trim()
+  );
 }
 
 /**
- * Extracts text page-by-page using pdf-parse v2
+ * Extracts text page-by-page (layout-safe)
  */
 export async function ingestPDF(pdfPath: string): Promise<RawPage[]> {
   const buffer = fs.readFileSync(pdfPath);
 
-  const parser = new PDFParse({
-    data: buffer,
-  });
-
-  // parsePageInfo ensures per-page text separation
+  const parser = new PDFParse({ data: buffer });
   const result = await parser.getText({ parsePageInfo: true });
   await parser.destroy();
 
-  const pages: RawPage[] = result.pages
-    .map((page, index) => ({
-      pageNumber: index + 1,
-      text: page.text.trim(),
+  return result.pages
+    .map((page, i) => ({
+      pageNumber: i + 1,
+      text: cleanText(page.text),
     }))
-    .filter((p) => p.text.length > 0);
-
-  return pages;
-}
-
-/* ---------------- CLI ---------------- */
-
-const __filename = fileURLToPath(import.meta.url);
-
-if (process.argv[1] === __filename) {
-  const pdfFile = process.argv[2];
-
-  if (!pdfFile) {
-    console.error("❌ Please provide a PDF file path");
-    process.exit(1);
-  }
-
-  ingestPDF(pdfFile).then((pages) => {
-    const outputDir = path.join("data", "raw");
-    fs.mkdirSync(outputDir, { recursive: true });
-
-    fs.writeFileSync(
-      path.join(outputDir, "pages.json"),
-      JSON.stringify(pages, null, 2)
-    );
-
-    console.log(`✅ Extracted ${pages.length} pages`);
-  });
+    .filter((p) => p.text.length > 50);
 }
