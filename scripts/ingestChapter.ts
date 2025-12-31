@@ -1,18 +1,18 @@
 import fs from "fs";
 import { ingestPDF } from "../ingest/pdfIngest.ts";
 import { parseSections } from "../ingest/sectionParser.ts";
-import "dotenv/config";
+import { extractConcepts } from "../ingest/conceptExtractor.ts";
 
 async function main() {
   const pdfPath = process.argv[2];
-  if (!pdfPath) {
-    throw new Error("PDF path required");
-  }
+  if (!pdfPath) throw new Error("PDF path required");
 
   const pages = await ingestPDF(pdfPath);
-
-  // 🔥 THIS WAS THE BUG — missing await
   const sections = await parseSections(pages);
+
+  for (const section of sections) {
+    section.concepts = await extractConcepts(section.explanationBlocks);
+  }
 
   fs.mkdirSync("data/final", { recursive: true });
 
@@ -21,7 +21,7 @@ async function main() {
     JSON.stringify(sections, null, 2)
   );
 
-  console.log(`✅ Chapter ingested: ${sections.length} sections`);
+  console.log(`✅ Chapter processed with concepts`);
 }
 
 main().catch(console.error);

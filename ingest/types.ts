@@ -3,10 +3,18 @@ export interface RawPage {
   text: string;
 }
 
+export interface Concept {
+  id: string;
+  title: string;
+  explanation: string;
+  sourceBlocks: number[]; // anti-hallucination
+}
+
 export interface LearningSection {
   title: string;
   pages: number[];
-  explanation: string;
+  explanationBlocks: string[]; // NEW
+  concepts: Concept[]; // NEW
   examples: string[];
   activities: {
     id: string;
