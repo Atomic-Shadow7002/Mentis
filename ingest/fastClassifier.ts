@@ -5,8 +5,8 @@ export function fastClassify(text: string): ClassifiedBlock | null {
     return { intent: "activity", confidence: 0.95 };
   }
 
-  if (text.endsWith("?") && text.length < 120) {
-    return { intent: "reflection-question", confidence: 0.7 };
+  if (text.trim().endsWith("?")) {
+    return { intent: "reflection-question", confidence: 0.6 };
   }
 
   if (

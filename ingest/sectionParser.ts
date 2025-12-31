@@ -8,6 +8,14 @@ function toBlocks(text: string): string[] {
     .filter((b) => b.length > 20);
 }
 
+function isActivityPrompt(text: string): boolean {
+  return (
+    /^[•\-]/.test(text) ||
+    /^\d+\./.test(text) ||
+    /^(write|describe|try|find|observe|explain)/i.test(text)
+  );
+}
+
 export async function parseSections(
   pages: RawPage[]
 ): Promise<LearningSection[]> {
@@ -72,9 +80,10 @@ export async function parseSections(
           break;
 
         default:
-          if (activeActivity) {
+          if (activeActivity && isActivityPrompt(block)) {
             activeActivity.prompts.push(block);
           } else {
+            activeActivity = null;
             current.explanationBlocks.push(block);
           }
       }
