@@ -2,69 +2,66 @@ import type { Concept } from "./types.ts";
 import fetch from "node-fetch";
 import "dotenv/config";
 
-const HF_URL =
-  "https://api-inference.huggingface.co/models/meta-llama/Llama-2-7b-chat-hf";
+/* ================================
+   Hugging Face Router Config
+================================ */
 
+const HF_URL = "https://router.huggingface.co/v1/chat/completions";
 const HF_TOKEN = process.env.HF_API_TOKEN;
 
-/* ---------- HF RESPONSE TYPES ---------- */
+if (!HF_TOKEN) {
+  throw new Error("HF_API_TOKEN is missing");
+}
 
-type HFGeneratedText = {
-  generated_text: string;
+type HFChatResponse = {
+  choices: {
+    message: {
+      content: string;
+    };
+  }[];
 };
 
-type HFArrayResponse = HFGeneratedText[];
-type HFSingleResponse = HFGeneratedText;
-
-function isHFArrayResponse(value: unknown): value is HFArrayResponse {
-  return (
-    Array.isArray(value) &&
-    value.length > 0 &&
-    typeof value[0] === "object" &&
-    value[0] !== null &&
-    "generated_text" in value[0]
-  );
-}
-
-function isHFSingleResponse(value: unknown): value is HFSingleResponse {
-  return (
-    typeof value === "object" && value !== null && "generated_text" in value
-  );
-}
-
-/* ---------- CONCEPT EXTRACTION ---------- */
+/* ================================
+   Concept Extraction
+================================ */
 
 export async function extractConcepts(blocks: string[]): Promise<Concept[]> {
-  if (!HF_TOKEN || blocks.length === 0) return [];
+  if (blocks.length === 0) return [];
 
   const numbered = blocks.map((b, i) => `[${i}] ${b}`).join("\n");
 
-  const prompt = `
-Extract educational CONCEPTS from this textbook content.
+  const systemPrompt = `
+You are a strict information extraction system.
+You output ONLY valid JSON.
+No markdown. No explanations. No extra text.
+`;
+
+  const userPrompt = `
+Extract KEY IDEAS from this school science textbook content.
 
 Rules:
-- Concepts must be explicitly present in the text
-- No new information
-- 5–8 concepts maximum
-- Each concept MUST cite source block indices
+- Identify 4–6 teachable ideas
+- Use ONLY the text
+- Do NOT invent facts
+- Each idea MUST reference source block indices
 
-Return JSON only.
+Return ONLY a JSON array.
 
 Format:
 [
   {
     "id": "short-id",
-    "title": "Concept title",
-    "explanation": "Clear explanation",
-    "sourceBlocks": [0,1]
+    "title": "Short idea name",
+    "explanation": "Explanation using the text",
+    "sourceBlocks": [0,2,3]
   }
 ]
 
-Text:
+TEXT BLOCKS:
 ${numbered}
 `;
 
-  let raw: unknown;
+  let responseText: string;
 
   try {
     const res = await fetch(HF_URL, {
@@ -74,54 +71,86 @@ ${numbered}
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        inputs: prompt,
-        parameters: {
-          temperature: 0,
-          max_new_tokens: 700,
-        },
+        model: "meta-llama/Meta-Llama-3-8B-Instruct",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0,
+        max_tokens: 600,
       }),
     });
 
-    raw = await res.json();
-  } catch {
+    responseText = await res.text();
+
+    if (!res.ok) {
+      console.error("❌ HF HTTP ERROR:", res.status);
+      console.error(responseText);
+      return [];
+    }
+  } catch (err) {
+    console.error("❌ HF request failed:", err);
     return [];
   }
 
-  /* ---------- NORMALIZE HF OUTPUT ---------- */
+  // 🔍 TEMP DEBUG LOG
+  console.log("\n🧪 RAW HF RESPONSE ↓↓↓");
+  console.log(responseText);
+  console.log("🧪 END RAW HF RESPONSE ↑↑↑\n");
 
-  let generatedText: string | null = null;
-
-  if (isHFArrayResponse(raw)) {
-    generatedText = raw[0].generated_text;
-  } else if (isHFSingleResponse(raw)) {
-    generatedText = raw.generated_text;
-  }
-
-  if (!generatedText) return [];
-
-  /* ---------- EXTRACT JSON ---------- */
-
-  const match = generatedText.match(/\[[\s\S]*\]/);
-  if (!match) return [];
-
-  let parsed: Concept[];
+  let parsedResponse: HFChatResponse;
 
   try {
-    parsed = JSON.parse(match[0]) as Concept[];
+    parsedResponse = JSON.parse(responseText) as HFChatResponse;
   } catch {
+    console.error("❌ HF returned non-JSON");
     return [];
   }
 
-  /* ---------- VALIDATION (ANTI-HALLUCINATION) ---------- */
+  const generatedText = parsedResponse.choices?.[0]?.message?.content;
 
-  return parsed.filter(
+  if (!generatedText || generatedText.trim() === "") {
+    console.error("❌ Empty model output");
+    return [];
+  }
+
+  /* ================================
+     Extract JSON Array
+  ================================ */
+
+  const start = generatedText.indexOf("[");
+  const end = generatedText.lastIndexOf("]");
+
+  if (start === -1 || end === -1) {
+    console.error("❌ No JSON array found:\n", generatedText);
+    return [];
+  }
+
+  let concepts: Concept[];
+
+  try {
+    concepts = JSON.parse(generatedText.slice(start, end + 1)) as Concept[];
+  } catch {
+    console.error("❌ JSON parse failed:\n", generatedText);
+    return [];
+  }
+
+  /* ================================
+     Anti-Hallucination Validation
+  ================================ */
+
+  return concepts.filter(
     (c) =>
       typeof c.id === "string" &&
       typeof c.title === "string" &&
       typeof c.explanation === "string" &&
       Array.isArray(c.sourceBlocks) &&
       c.sourceBlocks.every(
-        (i) => Number.isInteger(i) && typeof blocks[i] === "string"
+        (i) =>
+          Number.isInteger(i) &&
+          i >= 0 &&
+          i < blocks.length &&
+          typeof blocks[i] === "string"
       )
   );
 }
