@@ -13,12 +13,37 @@ export interface Concept {
 export interface LearningSection {
   title: string;
   pages: number[];
-  explanationBlocks: string[]; // NEW
-  concepts: Concept[]; // NEW
+  explanationBlocks: string[];
+  concepts: Concept[];
+
+  learningUnits?: LearningUnit[]; // 👈 ADD THIS
+
   examples: string[];
   activities: {
     id: string;
     prompts: string[];
   }[];
   reflectionQuestions: string[];
+}
+
+export interface LearningUnit {
+  conceptId: string;
+  title: string;
+  coreExplanation: string;
+
+  keyPoints: string[];
+
+  workedExample: {
+    scenario: string | null;
+    explanation: string | null;
+  };
+
+  realLifeConnection: string;
+
+  commonMisconception: {
+    misconception: string;
+    clarification: string;
+  };
+
+  sourceBlocks: number[];
 }
