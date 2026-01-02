@@ -33,9 +33,9 @@ export interface LearningUnit {
 
   keyPoints: string[];
 
-  workedExample: {
-    scenario: string | null;
-    explanation: string | null;
+  workedExample?: {
+    scenario: string;
+    explanation: string;
   };
 
   realLifeConnection: string;

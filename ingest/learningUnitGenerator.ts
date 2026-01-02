@@ -226,12 +226,12 @@ export async function generateLearningUnit(
   ];
 
   const blob = JSON.stringify(unit).toLowerCase();
+
   if (forbiddenPatterns.some((p) => blob.includes(p))) {
     console.warn(`⚠️ Hallucinated example removed for ${concept.id}`);
-    unit.workedExample = {
-      scenario: null,
-      explanation: null,
-    };
+
+    // REMOVE the field completely
+    delete unit.workedExample;
   }
 
   return unit;
