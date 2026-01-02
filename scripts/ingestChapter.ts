@@ -4,6 +4,7 @@ import { parseSections } from "../ingest/sectionParser.ts";
 import { extractConcepts } from "../ingest/conceptExtractor.ts";
 import { generateLearningUnit } from "../ingest/learningUnitGenerator.ts";
 import type { Concept, LearningUnit } from "../ingest/types.ts";
+import { refineLearningUnit } from "../ingest/learningUnitRefiner.ts";
 
 /* ------------------------------
    Helpers
@@ -76,7 +77,9 @@ async function main() {
       );
 
       if (unit) {
-        learningUnits.push(unit);
+        learningUnits.push(
+          refineLearningUnit(unit, concept, section.explanationBlocks)
+        );
       } else {
         console.warn(`   ⚠️ Skipped concept: ${concept.id}`);
       }

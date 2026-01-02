@@ -213,26 +213,5 @@ export async function generateLearningUnit(
     return null;
   }
 
-  // 🧹 Remove hallucinated examples (do not reject unit)
-  const forbiddenPatterns = [
-    "earth goes around the sun",
-    "astronaut",
-    "rocket",
-    "planet",
-    "gravity",
-    "medical",
-    "disease",
-    "space travel",
-  ];
-
-  const blob = JSON.stringify(unit).toLowerCase();
-
-  if (forbiddenPatterns.some((p) => blob.includes(p))) {
-    console.warn(`⚠️ Hallucinated example removed for ${concept.id}`);
-
-    // REMOVE the field completely
-    delete unit.workedExample;
-  }
-
   return unit;
 }
