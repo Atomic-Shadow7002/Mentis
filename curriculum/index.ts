@@ -1,6 +1,4 @@
-import { grade6ScienceCurriculum } from "./conceptCurriculum.ts";
-import { createCurriculumRegistry } from "./registry.ts";
-
-export const curriculumRegistry = createCurriculumRegistry(
-  grade6ScienceCurriculum
-);
+export * from "./types.ts";
+export * from "./registry.ts";
+export * from "./validate.ts";
+export { grade6ScienceCurriculum } from "./curriculum.ts";

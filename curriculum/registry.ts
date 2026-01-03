@@ -1,12 +1,8 @@
-import type {
-  ConceptCurriculum,
-  ConceptId,
-  ConceptNode,
-} from "./conceptCurriculum.ts";
+/* =====================================================
+   Curriculum Registry (Safe Read Access)
+===================================================== */
 
-/* ================================
-   Curriculum Registry
-================================ */
+import type { ConceptCurriculum, ConceptId, ConceptNode } from "./types.ts";
 
 export interface CurriculumRegistry {
   getConcept(id: ConceptId): ConceptNode | null;
@@ -18,26 +14,21 @@ export interface CurriculumRegistry {
 export function createCurriculumRegistry(
   curriculum: ConceptCurriculum
 ): CurriculumRegistry {
-  const concepts = curriculum.concepts;
-
-  // Prevent runtime mutation
-  Object.freeze(concepts);
-
   return {
     getConcept(id) {
-      return concepts[id] ?? null;
+      return curriculum.concepts[id] ?? null;
     },
 
     hasConcept(id) {
-      return id in concepts;
+      return id in curriculum.concepts;
     },
 
     listConceptIds() {
-      return Object.keys(concepts);
+      return Object.keys(curriculum.concepts);
     },
 
     listConcepts() {
-      return Object.values(concepts);
+      return Object.values(curriculum.concepts);
     },
   };
 }
