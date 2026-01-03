@@ -1,73 +1,49 @@
 ```
 mentis/
-├── README.md
-├── package.json
-├── tsconfig.json
-├── .env
-├── .gitignore
+├─ assets/
+│  └─ textbooks/
+│
+├─ data/
+│  ├─ raw/                 # PDF → pages
+│  ├─ intermediate/        # sections, concepts (optional)
+│  ├─ final/               # chapter.json, curriculum.json
+│  └─ learner/             # learner profiles (later)
+│
+├─ ingest/                 # Phase 1–3 (DONE)
+│  ├─ pdfIngest.ts
+│  ├─ sectionParser.ts
+│  ├─ classifyBlock.ts
+│  ├─ fastClassifier.ts
+│  ├─ llamaClassifier.ts
+│  ├─ classifierCache.ts
+│  ├─ conceptExtractor.ts
+│  ├─ learningUnitGenerator.ts
+│  ├─ learningUnitRefiner.ts
+│  └─ types.ts
+│
+├─ curriculum/             # Phase 6 (NEW)
+│  ├─ curriculumGraph.ts   # data models
+│  ├─ buildGraph.ts        # manual / semi-auto graph creation
+│  └─ validateGraph.ts     # DAG + integrity checks
+│
+├─ learner/                # Phase 7 (NEW)
+│  ├─ learnerModel.ts      # LearnerProfile, LearnerConceptState
+│  ├─ masteryUpdater.ts   # rules to update mastery
+│  └─ decayModel.ts        # forgetting logic
+│
+├─ adapt/                  # Phase 8 (NEW)
+│  ├─ adaptationEngine.ts  # decision rules (core brain)
+│  ├─ decisionTypes.ts     # LearningAction types
+│  └─ explainDecision.ts   # human-readable explanations
+│
+├─ scripts/
+│  ├─ ingestChapter.ts
+│  ├─ buildCurriculum.ts
+│  └─ simulateLearner.ts   # test adaptation logic
+│
+├─ README.md
+├─ tsconfig.json
+├─ package.json
+└─ eslint.config.js
 
-├── content/ # ✅ Canonical knowledge (source of truth)
-│ ├── science/
-│ │ └── photosynthesis/
-│ │ ├── concepts/
-│ │ │ ├── 01-what-is.md
-│ │ │ ├── 02-raw-materials.md
-│ │ │ ├── 03-chemical-equation.md
-│ │ │ └── 04-importance.md
-│ │ └── diagrams/
-│ │ ├── chloroplast.png
-│ │ └── leaf-cross-section.png
-│ └── README.md # Content authoring guide
-
-├── ingest/ # 📘 Textbook ingestion (PDF → raw data)
-│ ├── pdfIngest.ts # PDF → raw pages
-│ ├── sectionParser.ts # Pages → rough sections
-│ ├── diagramExtract.ts # (later) extract images
-│ └── README.md # Ingestion workflow docs
-
-├── normalize/ # 🧹 Raw → structured knowledge
-│ ├── sectionCleaner.ts # Remove noise, summaries, exercises
-│ ├── conceptExtractor.ts # Sections → candidate concepts
-│ ├── conceptRanker.ts # Identify key vs secondary concepts
-│ └── README.md
-
-├── core/ # 🧠 Learning intelligence (THE BRAIN)
-│ ├── concept.ts # Concept schema
-│ ├── learnerModel.ts # Learner state & mastery
-│ ├── adaptation.ts # Next-step decision logic
-│ ├── difficulty.ts # Difficulty calibration
-│ ├── spacing.ts # Spaced repetition logic
-│ └── events.ts # Learning event definitions
-
-├── ai/ # 🤖 AI used as transformer (NOT authority)
-│ ├── simplify.ts # Level-based explanation rewrite
-│ ├── examples.ts # Generate extra examples
-│ ├── hints.ts # Hint generation
-│ └── prompts.ts # Prompt templates
-
-├── data/ # 📊 Runtime & analysis data
-│ ├── raw/ # PDF output (pages, sections)
-│ ├── processed/ # Structured concepts JSON
-│ ├── learner/ # Per-user learner models
-│ └── stats/ # Aggregated difficulty stats
-
-├── server/ # 🌐 API layer
-│ ├── index.ts
-│ ├── routes/
-│ │ ├── content.ts
-│ │ ├── learner.ts
-│ │ └── events.ts
-│ └── storage/
-│ ├── fileStore.ts
-│ └── dbStore.ts # (later)
-
-├── web/ # 🖥️ Frontend (later)
-│ ├── pages/
-│ ├── components/
-│ └── hooks/
-
-└── scripts/ # 🔧 Dev utilities
-├── ingest-pdf.ts
-├── rebuild-content.ts
-└── simulate-learner.ts
 ```
