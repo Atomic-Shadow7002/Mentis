@@ -1,4 +1,4 @@
-import { grade6ScienceCurriculum } from "../curriculum/curriculum.ts";
+import { scienceCurriculum } from "../curriculum/curriculum.ts";
 import { validateCurriculum } from "../curriculum/validate.ts";
 import { createCurriculumRegistry } from "../curriculum/registry.ts";
 import type { ConceptCurriculum } from "../curriculum/types.ts";
@@ -27,23 +27,23 @@ function expectThrow(fn: () => void, label: string) {
 ===================================================== */
 
 console.log("🔹 Validate curriculum");
-validateCurriculum(grade6ScienceCurriculum);
+validateCurriculum(scienceCurriculum);
 
 console.log("🔹 Test immutability");
 
 /* ---- Top-level mutation ---- */
 expectThrow(() => {
-  (grade6ScienceCurriculum as unknown as { grade: number }).grade = 10;
+  (scienceCurriculum as unknown as { domain: string }).domain = "math";
 }, "Top-level mutation");
 
 /* ---- Nested mutation ---- */
 expectThrow(() => {
-  grade6ScienceCurriculum.concepts.curiosity.learningOutcomes.push("hack");
+  scienceCurriculum.concepts.curiosity.learningOutcomes.push("hack");
 }, "Nested mutation");
 
 console.log("🔹 Test registry");
 
-const registry = createCurriculumRegistry(grade6ScienceCurriculum);
+const registry = createCurriculumRegistry(scienceCurriculum);
 
 assert(registry.hasConcept("curiosity"), "Curiosity exists");
 assert(!registry.hasConcept("fake"), "Fake does not exist");
@@ -54,24 +54,30 @@ assert(
 
 console.log("🔹 Test validation failures");
 
+/* ---- Invalid pedagogical rule ---- */
 expectThrow(() => {
   const bad: ConceptCurriculum = {
-    ...grade6ScienceCurriculum,
+    ...scienceCurriculum,
 
     concepts: {
       bad: {
         id: "bad",
         title: "Bad",
         description: "Invalid",
+
         kind: "disposition",
         difficulty: 1,
-        learningOutcomes: [],
-        completionBehavior: "finite",
+
+        learningBands: ["primary"],
+
+        learningOutcomes: [], // ❌ invalid
+
+        completionBehavior: "finite", // ❌ invalid for disposition
         reinforcement: "none",
       },
     },
 
-    prerequisites: [],
+    dependencies: [],
   };
 
   validateCurriculum(bad);
