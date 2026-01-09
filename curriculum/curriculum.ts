@@ -1,33 +1,36 @@
-/* =====================================================
-   Grade 6 Science – Concept Curriculum
-===================================================== */
-
 import type { ConceptCurriculum } from "./types.ts";
 import { validateCurriculum } from "./validate.ts";
 import { deepFreeze } from "./freeze.ts";
 
 const curriculum: ConceptCurriculum = {
-  curriculumId: "grade6-science-v1",
-  subject: "Science",
-  grade: 6,
+  curriculumId: "science-canonical-v1",
+  domain: "science",
   version: "1.0.0",
 
-  description: "Foundational science concepts for Grade 6",
+  description: "Canonical, grade-agnostic science knowledge graph",
 
   concepts: {
     curiosity: {
       id: "curiosity",
       title: "Curiosity in Science",
       description:
-        "Science begins with curiosity, observation, and questioning.",
+        "Curiosity drives observation, questioning, and exploration.",
+
       kind: "disposition",
       difficulty: 1,
+
+      learningBands: ["early", "primary", "middle", "secondary"],
+
       learningOutcomes: [
-        "Recognize curiosity as the starting point of science",
-        "Ask questions based on observations",
+        "Recognize curiosity as the starting point of inquiry",
+        "Ask meaningful questions based on observation",
       ],
+
       completionBehavior: "reinforce_forever",
       reinforcement: "contextual",
+
+      bloomLevel: "understand",
+      tags: ["inquiry", "mindset"],
     },
 
     scientific_method: {
@@ -35,26 +38,48 @@ const curriculum: ConceptCurriculum = {
       title: "Scientific Method",
       description:
         "A structured process to investigate questions scientifically.",
+
       kind: "procedural",
       difficulty: 2,
+
+      learningBands: ["primary", "middle", "secondary"],
+
       learningOutcomes: [
-        "List steps of the scientific method",
-        "Apply steps to daily-life problems",
+        "Identify steps of the scientific method",
+        "Apply the method to simple problems",
       ],
+
+      masteryCriteria: {
+        requiredOutcomes: 2,
+        assessmentStyle: "procedural",
+      },
+
       completionBehavior: "finite",
       reinforcement: "spaced",
+
+      bloomLevel: "apply",
+      tags: ["method", "process"],
     },
   },
 
-  prerequisites: [
+  dependencies: [
     {
       from: "curiosity",
       to: "scientific_method",
-      reason: "Curiosity motivates asking questions before applying a method",
+      type: "cognitive",
+      strength: 2,
+      reason: "Curiosity motivates questioning before structured investigation",
     },
   ],
+
+  pedagogy: {
+    spiralLearning: true,
+    maxDifficultyJump: 1,
+  },
+
+  sourceAuthority: "NCERT",
 };
 
 validateCurriculum(curriculum);
 
-export const grade6ScienceCurriculum = deepFreeze(curriculum);
+export const scienceCurriculum = deepFreeze(curriculum);

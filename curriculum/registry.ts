@@ -1,14 +1,15 @@
-/* =====================================================
-   Curriculum Registry (Safe Read Access)
-===================================================== */
-
-import type { ConceptCurriculum, ConceptId, ConceptNode } from "./types.ts";
+import type {
+  ConceptCurriculum,
+  ConceptId,
+  ConceptNode,
+  LearningBand,
+} from "./types.ts";
 
 export interface CurriculumRegistry {
   getConcept(id: ConceptId): ConceptNode | null;
   hasConcept(id: ConceptId): boolean;
-  listConceptIds(): ConceptId[];
   listConcepts(): ConceptNode[];
+  projectByBand(band: LearningBand): ConceptNode[];
 }
 
 export function createCurriculumRegistry(
@@ -23,12 +24,14 @@ export function createCurriculumRegistry(
       return id in curriculum.concepts;
     },
 
-    listConceptIds() {
-      return Object.keys(curriculum.concepts);
-    },
-
     listConcepts() {
       return Object.values(curriculum.concepts);
+    },
+
+    projectByBand(band) {
+      return Object.values(curriculum.concepts).filter((c) =>
+        c.learningBands.includes(band)
+      );
     },
   };
 }

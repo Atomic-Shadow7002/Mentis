@@ -1,4 +1,10 @@
+/* =====================================================
+   Curriculum Public API
+===================================================== */
+
 export * from "./types.ts";
 export * from "./registry.ts";
 export * from "./validate.ts";
-export { grade6ScienceCurriculum } from "./curriculum.ts";
+
+/* Canonical curricula (can grow later) */
+export { scienceCurriculum } from "./curriculum.ts";
