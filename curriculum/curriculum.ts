@@ -2,6 +2,10 @@ import type { ConceptCurriculum } from "./types.ts";
 import { validateCurriculum } from "./validate.ts";
 import { deepFreeze } from "./freeze.ts";
 
+/* =====================================================
+   Canonical Science Curriculum
+===================================================== */
+
 const curriculum: ConceptCurriculum = {
   curriculumId: "science-canonical-v1",
   domain: "science",
@@ -31,6 +35,8 @@ const curriculum: ConceptCurriculum = {
 
       bloomLevel: "understand",
       tags: ["inquiry", "mindset"],
+
+      introducedIn: "science-canonical-v1",
     },
 
     scientific_method: {
@@ -59,6 +65,8 @@ const curriculum: ConceptCurriculum = {
 
       bloomLevel: "apply",
       tags: ["method", "process"],
+
+      introducedIn: "science-canonical-v1",
     },
   },
 
@@ -81,5 +89,9 @@ const curriculum: ConceptCurriculum = {
 };
 
 validateCurriculum(curriculum);
+
+/* =====================================================
+   Immutable Export
+===================================================== */
 
 export const scienceCurriculum = deepFreeze(curriculum);

@@ -1,4 +1,4 @@
-import { grade6ScienceCurriculum } from "../curriculum/curriculum.ts";
+import { scienceCurriculum } from "../curriculum/curriculum.ts";
 import { validateCurriculum } from "../curriculum/validate.ts";
 import { alignConceptsToCurriculum } from "../curriculum/alignment/aligner.ts";
 import type { ExtractedConcept } from "../curriculum/alignment/types.ts";
@@ -18,7 +18,7 @@ function assert(condition: unknown, message: string): asserts condition {
 ===================================================== */
 
 console.log("🔹 Validate curriculum");
-validateCurriculum(grade6ScienceCurriculum);
+validateCurriculum(scienceCurriculum);
 
 /* =====================================================
    Extracted Concept Fixtures
@@ -54,10 +54,7 @@ const extractedConcepts: ExtractedConcept[] = [
 
 console.log("🔹 Run alignment engine");
 
-const result = alignConceptsToCurriculum(
-  extractedConcepts,
-  grade6ScienceCurriculum
-);
+const result = alignConceptsToCurriculum(extractedConcepts, scienceCurriculum);
 
 /* =====================================================
    Assertions
