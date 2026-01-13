@@ -5,6 +5,7 @@ import type { LearnerState } from "../learner/types.ts";
 import { alignConceptsToCurriculum } from "../curriculum/alignment/aligner.ts";
 import { applyLearningSignal } from "../learner/learningEngine.ts";
 import { decideLearningAction } from "../learner/decisionEngine.ts";
+import { propagateMastery } from "../learner/dependencyPropagation.ts";
 
 /* =====================================================
    End-to-End Learning Pipeline
@@ -35,6 +36,9 @@ export function runLearningPipeline(
       });
     }
   }
+
+  // Dependency-based mastery propagation
+  updated = propagateMastery(updated, curriculum);
 
   return updated;
 }
